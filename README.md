@@ -61,3 +61,19 @@ python /lesson/train_llm03.py --model /model --dataset /dataset/train.jsonl --ou
 ~~~bash
 python /lesson/checkpoint_resume_case.py --steps 6 --checkpoint-steps 3 --train-count 100 --eval-count 10
 ~~~
+
+## 2026-11-24 실행 검증
+
+5개 Job을 순차적으로 짧게 실행하고 GPU 학습, S3 결과 저장, 데모의 결과 가져오기를 확인했습니다.
+
+| Job | 상태 | 가져온 결과 파일 |
+|---|---|---:|
+| [demo-main](https://sat.cloudsecuritylab.co.kr/local#jobs/3dc034e1ccc24ef980a77aff8b7655b4) | Succeeded | 17 |
+| [ynat](https://sat.cloudsecuritylab.co.kr/local#jobs/3319c7e2cfd74c97918b32af44060ce9) | Succeeded | 12 |
+| [fashion](https://sat.cloudsecuritylab.co.kr/local#jobs/7aadd0fd186145b1a52f6a565c8414eb) | Succeeded | 12 |
+| [llm03](https://sat.cloudsecuritylab.co.kr/local#jobs/7fcd5084fb3a46f382599581781d1380) | Succeeded | 11 |
+| [ynat-resume](https://sat.cloudsecuritylab.co.kr/local#jobs/f29b398a498c4e1a9e3c4283a267784d) | Succeeded | 13 |
+
+ynat-resume은 S3에 3단계 체크포인트를 저장하고 첫 프로세스를 의도적으로 중단한 뒤, 새 프로세스에서 3단계를 복원해 6단계까지 완료했습니다.
+
+입력 준비 시작부터 학습 전 평가 시작까지 관측된 시간은 EBS의 ynat에서 21분 50초, 로컬 NVMe의 ynat-resume 첫 프로세스에서 2분 13초였습니다. 같은 텍스트 입력을 사용한 서로 다른 Job의 관측값입니다.

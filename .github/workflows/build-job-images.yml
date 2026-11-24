@@ -14,14 +14,25 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        job: [demo-main, ynat, fashion, llm03, ynat-resume]
+        include:
+          - job: demo-main
+            directory: 01-demo-main
+          - job: ynat
+            directory: 02-ynat
+          - job: fashion
+            directory: 03-fashion
+          - job: llm03
+            directory: 04-llm03
+          - job: ynat-resume
+            directory: 05-ynat-resume
     steps:
       - uses: actions/checkout@v4
       - name: Build
         env:
           JOB: ${{ matrix.job }}
+          LAB_DIRECTORY: ${{ matrix.directory }}
         run: |
-          docker build --platform linux/amd64 --label "org.opencontainers.image.source=https://github.com/SCPv2/sat-training-labs" --label "org.opencontainers.image.revision=$GITHUB_SHA" -t "ghcr.io/scpv2/sat-training-labs:$JOB-cuda" "labs/$JOB"
+          docker build --platform linux/amd64 --label "org.opencontainers.image.source=https://github.com/SCPv2/sat-training-labs" --label "org.opencontainers.image.revision=$GITHUB_SHA" -t "ghcr.io/scpv2/sat-training-labs:$JOB-cuda" "labs/$LAB_DIRECTORY"
       - name: Check Python syntax
         env:
           JOB: ${{ matrix.job }}

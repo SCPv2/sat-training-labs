@@ -10,7 +10,7 @@ Job별 실습 코드와 Dockerfile입니다. 모델과 데이터는 실행 시 �
 
 ## 데모 실행 가이드
 
-https://sat.cloudsecuritylab.co.kr/local 에서 로그인 후 Training Job 생성을 엽니다. Spot Training, GPU 리소스 1개, PyTorch, 노드 1개를 선택합니다. 아래 이미지와 명령을 입력합니다. 각 Job의 완료와 결과 파일을 확인한 뒤 다음 Job을 생성합니다. 데모의 실제 실행 장치는 AWS GPU EC2입니다.
+https://sat.cloudsecuritylab.co.kr/local 에서 로그인 후 Training Job 생성을 엽니다. Spot Training, GPU 리소스 1개, PyTorch, 노드 1개를 선택합니다. 아래 이미지와 명령을 입력합니다. 각 Job의 완료와 결과 파일을 확인한 뒤 다음 Job을 생성합니다. 모델·데이터는 데모에 연결된 기존 S3 입력에서 가져옵니다. GPU EC2에 로컬 NVMe가 마운트되어 있으면 임시 작업 공간으로 사용하며, 준비되지 않은 환경에서는 EBS 경로를 사용합니다. 체크포인트와 최종 결과는 S3에 저장합니다. 데모의 실제 실행 장치는 AWS GPU EC2입니다.
 
 ### demo-main
 

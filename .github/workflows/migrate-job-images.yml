@@ -1,0 +1,72 @@
+name: Migrate job images to GHCR
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - job: demo-main
+            source: demo-main-20261106
+          - job: ynat
+            source: ynat-20261107-v3
+          - job: fashion
+            source: fashion-20261107-v3
+          - job: llm03
+            source: llm03-20261107-v3
+          - job: ynat-resume
+            source: ynat-resume-20261107-v1
+    steps:
+      - name: Authenticate for migration
+        env:
+          ECR_PASSWORD: ${{ secrets.MIGRATION_ECR_PASSWORD }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          test -n "$ECR_PASSWORD"
+          printf '%s' "$ECR_PASSWORD" | docker login 445567110488.dkr.ecr.us-west-2.amazonaws.com --username AWS --password-stdin
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+      - name: Pull and inspect application files
+        env:
+          SOURCE_TAG: ${{ matrix.source }}
+        run: |
+          source="445567110488.dkr.ecr.us-west-2.amazonaws.com/sat-gemma4-training:$SOURCE_TAG"
+          docker pull "$source"
+          container=$(docker create "$source")
+          trap 'docker rm "$container" >/dev/null' EXIT
+          docker export "$container" | tar -tf - > image-files.txt
+          if grep -E '^((opt/sat/)?(app|web)/|app/(server.py|index.html|login.js)|root/\.aws/|root/\.ssh/)' image-files.txt; then
+            echo "Image contains site or credential paths. Review required."
+            exit 1
+          fi
+          grep -E '^(work|lesson|model|bundle|dataset)/' image-files.txt | head -100 || true
+      - name: Publish job image
+        env:
+          SOURCE_TAG: ${{ matrix.source }}
+          JOB: ${{ matrix.job }}
+        run: |
+          source="445567110488.dkr.ecr.us-west-2.amazonaws.com/sat-gemma4-training:$SOURCE_TAG"
+          target="ghcr.io/scpv2/sat-training-labs:$JOB-cu124"
+          docker tag "$source" "$target"
+          docker push "$target"
+      - name: Remove registry authentication
+        if: always()
+        run: |
+          docker logout ghcr.io || true
+          docker logout 445567110488.dkr.ecr.us-west-2.amazonaws.com || true
+  cnn:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish CNN job tag
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker pull ghcr.io/scpv2/sat-training-labs:cu124
+          docker tag ghcr.io/scpv2/sat-training-labs:cu124 ghcr.io/scpv2/sat-training-labs:cnn-cu124
+          docker push ghcr.io/scpv2/sat-training-labs:cnn-cu124

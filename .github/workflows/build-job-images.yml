@@ -25,7 +25,12 @@ jobs:
       - name: Check Python syntax
         env:
           JOB: ${{ matrix.job }}
-        run: docker run --rm --entrypoint python "ghcr.io/scpv2/sat-training-labs:$JOB-cuda" -m compileall -q .
+        run: |
+          docker run --rm --entrypoint python "ghcr.io/scpv2/sat-training-labs:$JOB-cuda" -m compileall -q .
+          docker run --rm --entrypoint python "ghcr.io/scpv2/sat-training-labs:$JOB-cuda" -c 'import train'
+          if [ "$JOB" = demo-main ]; then
+            docker run --rm --entrypoint test "ghcr.io/scpv2/sat-training-labs:$JOB-cuda" -s /opt/requirements-resolved.txt
+          fi
       - name: Publish
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}

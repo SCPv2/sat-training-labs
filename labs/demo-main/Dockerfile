@@ -2,5 +2,6 @@ FROM pytorch/pytorch:2.10.0-cuda12.6-cudnn9-runtime@sha256:4ec910830ec6c3b837d56
 WORKDIR /work
 COPY requirements-train.lock ./
 RUN pip install --break-system-packages --no-cache-dir -r requirements-train.lock
+RUN pip freeze > /opt/requirements-resolved.txt
 COPY run.sh storage.py settings.py preflight.py train.py ./
 ENV PYTHONUNBUFFERED=1
